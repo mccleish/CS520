@@ -1,8 +1,9 @@
-
+#Curtis McCleish ccm141
 import math
+import heapq
+#from collections import deque
 
-from collections import deque
-
+endNodeCoords = [18,3]
 #we need to define function BFS, class problem, class node, FIFO queue for frontier, reached array, is_empty function for FIFO queue, 
 # pop function for node, expand(problem, node), child, child.state, adding to reached and frontier
 class Problem:
@@ -25,20 +26,27 @@ class Node:
         self.state = 0
         #self.distance = {}
         #neighbors array will hold distance values 
-        # ex. neighbors["B"] = 15.23
+
         if neighborPassList:
             for neighbor in neighborPassList:
                 self.addNeighborToNeighbors(neighbor)
 
+        self.path_cost = (math.sqrt((self.x-endNodeCoords[0])**2 + (self.y-endNodeCoords[1])**2))
+        #greedy path to I (straight line)
+        #heuristic ^
     def addNeighborToNeighbors(self, neighbor):
         distance1 = (math.sqrt((self.x-neighbor.x)**2 + (self.y-neighbor.y)**2))
         self.neighbors[neighbor] = distance1
         neighbor.neighbors[self] = distance1
         #update list of neighbors w/ u and v
         #since in problem 1 the graph is undirected all children = neighbors
+    
 
     def __repr__(self):
         return self.name # printing 
+
+    def __lt__(self, node2):
+        return self.name < node2.name
 
 
 
@@ -55,9 +63,11 @@ def main():
 #I (18,3) connected to H, J, G (TERMINAL NODE)
 #J (12,3) connected to I and D
 #perform BFS for I
+
+
     A = Node(0, 4, None, "A")
     B = Node(3, 4, [A], "B")
-    C = Node(7,9,[B], "C" )
+    C = Node(7,9,[B], "C")
     D = Node(7,3,[B], "D")
     E =Node(10,0,[], "E")
     F= Node(12,12,[C],"F")
@@ -71,6 +81,21 @@ def main():
     best_first_search(problem)
 
 def best_first_search(problem):
+    node = problem.initial
+   #frontier = heapq() # heapq
+    frontier = []
+    heapq.heappush(frontier, (node.path_cost, node))
+    reached = [problem.initial]
+    while (len(frontier)):
+        print("frontier", frontier)
+        print("reached", reached)
+        node = heapq.heappop(frontier)[1]
+        if problem.is_goal(node):
+            return node
+        for child in node.neighbors:
+            if (child not in reached):
+                reached.append(child)
+                heapq.heappush(frontier, (child.path_cost, child))
     return 0
 
 #function BEST-FIRST-SEARCH(problem, f) returns a solution node or failure
@@ -95,56 +120,26 @@ def best_first_search(problem):
 
         #yield NODE(STATE=s', PARENT=node, ACTION=action, PATH-COST=cost)
 
+''' from RUssell and Norvig text
+Following the PARENT pointers back from a node allows us to recover the states and actions
+along the path to that node. Doing this from a goal node gives us the solution.
 
+We need a data structure to store the frontier. The appropriate choice is a queue of some
+kind, because the operations on a frontier are:
+• IS-EMPTY(frontier) returns true only if there are no nodes in the frontier.
+• POP(frontier) removes the top node from the frontier and returns it.
+• TOP(frontier) returns (but does not remove) the top node of the frontier.
+• ADD(node, frontier) inserts node into its proper place in the queue.
+
+• node.STATE: the state to which the node corresponds;
+• node.PARENT: the node in the tree that generated this node;
+• node.ACTION: the action that was applied to the parent’s state to generate this node;
+• node.PATH-COST: the total cost of the path from the initial state to this node. In mathematical formulas, we use g(node) as a synonym for PATH-COST.'''
 
 if __name__ == "__main__":
     main()
 
 
 
-
-
-'''
-def breadth_first_search(problem):
-    node = problem.initial
-    print("Starting from node", node)
-    if (problem.is_goal(node)):
-        print("Goal found ")
-        return node
-    frontier = deque([node]) # FIFO queue: .append() and .popleft()
-    reached = [problem.initial]
-    while len(frontier) > 0: # while not IS-EMPTY(frontier) do
-        print("Frontier array", frontier)
-        print("reached array", reached)
-        node = frontier.popleft()
-        for child in node.neighbors:
-
-            if (problem.is_goal(child)):
-                print("Found target node", child)
-                return child
-            if (not (child in reached)):
-                print(child, "child")
-                reached.append(child)
-                frontier.append(child)
-    return 0 # failure
-''''''
-function BREADTH-FIRST-SEARCH(problem) returns a solution node or failure
-    node←NODE(problem.INITIAL)
-    if problem.IS-GOAL(node.STATE) then return node
-    frontier←a FIFO queue, with node as an element
-    reached← {problem.INITIAL}
-    while not IS-EMPTY(frontier) do
-        node←POP(frontier)
-        for each child in EXPAND(problem, node) do
-            s←child.STATE
-            if problem.IS-GOAL(s) then return child
-            if s is not in reached then
-                add s to reached
-                add child to frontier
-    return failure
-
-function UNIFORM-COST-SEARCH(problem) returns a solution node, or failure
-    return BEST-FIRST-SEARCH(problem, PATH-COST)
-'''
 
 
